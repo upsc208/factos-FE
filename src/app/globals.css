@@ -1,0 +1,546 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: var(--primary);
+  --foreground: #ffffff;
+  --primary: #E2322A;
+  --secondary: #004595;
+  --accent: #E2322A;
+  --white: #FFFFFF;
+  --volt: #CCFF00;
+
+  /* Surface colors for light/team mode */
+  --surface: #ffffff;
+  --surface-secondary: rgba(255, 255, 255, 0.1);
+  --surface-tertiary: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.2);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.3);
+
+  /* Chelsea kit top bar variables */
+  --chelsea-top-bar-bg: #ffffff;
+  --chelsea-top-bar-text: #034694;
+
+  /* Arsenal kit top bar variables */
+  --arsenal-top-bar-bg: #ffffff;
+  --arsenal-top-bar-text: #EF0107;
+
+  /* Tottenham kit top bar variables */
+  --tottenham-top-bar-bg: #ffffff;
+  --tottenham-top-bar-text: #132257;
+
+  /* Manchester City kit top bar variables */
+  --mancity-top-bar-bg: #ffffff;
+  --mancity-top-bar-text: #1C2C5B;
+}
+
+.dark {
+  --background: #0a0b10;
+  --foreground: #e2e8f0;
+  --surface: #111318;
+  --surface-secondary: #16181f;
+  --surface-tertiary: #1c1e27;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+  --text-muted: #475569;
+
+  /* Chelsea kit top bar variables */
+  --chelsea-top-bar-bg: #070e1b;
+  --chelsea-top-bar-text: #ffffff;
+
+  /* Arsenal kit top bar variables */
+  --arsenal-top-bar-bg: #0e0202;
+  --arsenal-top-bar-text: #ffffff;
+
+  /* Tottenham kit top bar variables */
+  --tottenham-top-bar-bg: #070b1a;
+  --tottenham-top-bar-text: #ffffff;
+
+  /* Manchester City kit top bar variables */
+  --mancity-top-bar-bg: #081629;
+  --mancity-top-bar-text: #ffffff;
+}
+
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-white: var(--white);
+  --color-volt: var(--volt);
+  --font-bebas: var(--font-bebas-neue);
+  --font-kanit: var(--font-kanit);
+
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-border-color: var(--border-color);
+  --color-border-light: var(--border-light);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-muted: var(--text-muted);
+}
+
+
+html, body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard Variable", Pretendard, Roboto, "Noto Sans KR", "Segoe UI", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bold Football Typography */
+.font-bebas {
+  font-family: var(--font-bebas-neue), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+h1, h2, h3 {
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.text-impact {
+  font-family: var(--font-bebas-neue), sans-serif;
+  text-transform: uppercase;
+  line-height: 0.9;
+}
+
+/* Gemini Aurora Background */
+.gemini-aurora {
+  background: radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 100% 100%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+              radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+}
+
+/* AI Summary Glow */
+.ai-summary-glow {
+  position: relative;
+}
+
+.ai-summary-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, var(--gemini-indigo), var(--gemini-purple), var(--gemini-blue));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.15;
+  filter: blur(8px);
+}
+
+/* 세련된 포인트 라인 */
+.primary-gradient-line {
+  background: linear-gradient(90deg, var(--primary) 0%, #ff6b6b 100%);
+}
+
+.dark .primary-gradient-line {
+  background: linear-gradient(90deg, var(--volt) 0%, rgba(204, 255, 0, 0.2) 100%) !important;
+}
+
+/* 부드러운 그림자 */
+.soft-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.dark .soft-shadow {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.soft-shadow-hover {
+  transition: all 0.3s ease;
+}
+
+.soft-shadow-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.dark .soft-shadow-hover:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Dark mode transition */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===================================================
+   Kit-inspired Dynamic Patterns
+   =================================================== */
+
+/* Manchester United: Premium Jersey Mesh Texture & Soft Stadium Ambient Glow */
+.pattern-dots {
+  position: relative;
+  isolation: isolate;
+}
+.pattern-dots::before {
+  content: '';
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1000px;
+  height: 1000px;
+  max-width: 95vw;
+  max-height: 95vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url('/devil.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.12;
+  transition: opacity 0.3s ease;
+}
+.dark .pattern-dots::before {
+  opacity: 0.1;
+  filter: invert(1) brightness(2);
+}
+
+/* Background mesh texture (separate layer for dots) */
+.pattern-dots::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(var(--primary) 0.5px, transparent 0.5px),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.005) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.005) 75%, rgba(0, 0, 0, 0.005)),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.005) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.005) 75%, rgba(0, 0, 0, 0.005));
+  background-size: 16px 16px, 8px 8px, 8px 8px;
+  background-position: 0 0, 0 0, 4px 4px;
+  opacity: 0.07;
+}
+
+.dark .pattern-dots::after {
+  background-image: 
+    radial-gradient(rgba(218, 41, 28, 0.15) 0.5px, transparent 0.5px),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.002) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.002) 75%, rgba(255, 255, 255, 0.002)),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.002) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.002) 75%, rgba(255, 255, 255, 0.002));
+  opacity: 0.8;
+}
+
+/* Stadium Glow Overlay */
+.pattern-dots-glow {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(218, 41, 28, 0.04) 0%, rgba(218, 41, 28, 0.01) 50%, transparent 100%);
+}
+
+.dark .pattern-dots-glow {
+  background: radial-gradient(circle at top, rgba(218, 41, 28, 0.08) 0%, rgba(218, 41, 28, 0.02) 50%, transparent 100%);
+}
+
+/* Liverpool: Anfield Glow & Faint Liverbird (Phoenix) Background */
+.pattern-piping {
+  position: relative;
+  isolation: isolate; /* Create new stacking context so z-index: -1 stays above background */
+}
+.pattern-piping::before {
+  content: '';
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 650px;
+  height: 650px;
+  max-width: 85vw;
+  max-height: 85vh;
+  z-index: -1; /* Render behind page content but in front of background */
+  pointer-events: none;
+  background-image: url('/phoenix.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.08; /* Highly visible but elegant watermark */
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.dark .pattern-piping::before {
+  opacity: 0.05; /* Faint white watermark in dark mode */
+  filter: invert(1); /* Invert black silhouette to white/light gray */
+}
+.pattern-piping::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(200, 16, 46, 0.03) 0%, rgba(200, 16, 46, 0.01) 50%, transparent 100%);
+}
+
+.dark .pattern-piping::after {
+  background: radial-gradient(circle at top, rgba(200, 16, 46, 0.06) 0%, rgba(200, 16, 46, 0.01) 50%, transparent 100%);
+}
+
+/* Chelsea 25/26: London Architecture Grunge / Textured Clash */
+.pattern-grunge {
+  position: relative;
+  isolation: isolate;
+}
+.pattern-grunge::before {
+  content: '';
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  max-width: 90vw;
+  max-height: 90vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url('/lion.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.1;
+  transition: opacity 0.3s ease;
+}
+.dark .pattern-grunge::before {
+  opacity: 0.07;
+  filter: invert(1) brightness(2);
+}
+.pattern-grunge::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(3, 70, 148, 0.04) 0%, rgba(3, 70, 148, 0.01) 50%, transparent 100%);
+}
+.dark .pattern-grunge::after {
+  background: radial-gradient(circle at top, rgba(3, 70, 148, 0.06) 0%, rgba(3, 70, 148, 0.01) 50%, transparent 100%);
+}
+
+/* Arsenal: Emirates Stadium Glow & Cannon Background */
+.pattern-cannon {
+  position: relative;
+  isolation: isolate;
+}
+.pattern-cannon::before {
+  content: '';
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  max-width: 90vw;
+  max-height: 90vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url('/cannon.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.08;
+  transition: opacity 0.3s ease;
+}
+.dark .pattern-cannon::before {
+  opacity: 0.05;
+  filter: invert(1) brightness(2);
+}
+.pattern-cannon::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(239, 1, 7, 0.04) 0%, rgba(239, 1, 7, 0.01) 50%, transparent 100%);
+}
+.dark .pattern-cannon::after {
+  background: radial-gradient(circle at top, rgba(239, 1, 7, 0.06) 0%, rgba(239, 1, 7, 0.01) 50%, transparent 100%);
+}
+
+/* Tottenham: Modern Stadium Glow & Cockerel Background */
+.pattern-cockerel {
+  position: relative;
+  isolation: isolate;
+}
+.pattern-cockerel::before {
+  content: '';
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  max-width: 85vw;
+  max-height: 85vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url('/chicken.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  transition: opacity 0.3s ease;
+}
+.dark .pattern-cockerel::before {
+  opacity: 0.05;
+  filter: invert(1) brightness(2);
+  mix-blend-mode: screen;
+}
+.pattern-cockerel::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(19, 34, 87, 0.04) 0%, rgba(19, 34, 87, 0.01) 50%, transparent 100%);
+}
+.dark .pattern-cockerel::after {
+  background: radial-gradient(circle at top, rgba(19, 34, 87, 0.08) 0%, rgba(19, 34, 87, 0.02) 50%, transparent 100%);
+}
+
+/* Manchester City: Sky Blue Glow & Moon/Ship Background */
+.pattern-moon {
+  position: relative;
+  isolation: isolate;
+}
+.pattern-moon::before {
+  content: '';
+  position: fixed;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  max-width: 90vw;
+  max-height: 90vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url('/moon.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  transition: opacity 0.3s ease;
+}
+.dark .pattern-moon::before {
+  opacity: 0.05;
+  filter: invert(1) brightness(2);
+  mix-blend-mode: screen;
+}
+.pattern-moon::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 600px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(133, 198, 242, 0.05) 0%, rgba(133, 198, 242, 0.01) 50%, transparent 100%);
+}
+.dark .pattern-moon::after {
+  background: radial-gradient(circle at top, rgba(133, 198, 242, 0.08) 0%, rgba(133, 198, 242, 0.02) 50%, transparent 100%);
+}
+
+/* Base Utility for Patterns */
+.kit-pattern {
+  position: relative;
+}
+
+/* Volt neon glow accent line for dark mode */
+.dark .volt-accent-line {
+  background: linear-gradient(90deg, transparent 0%, rgba(204, 255, 0, 0.3) 50%, transparent 100%);
+  height: 1px;
+}
+
+/* Volt border glow on hover */
+.dark .volt-hover-glow:hover {
+  border-color: rgba(204, 255, 0, 0.25) !important;
+  box-shadow: 0 0 25px rgba(204, 255, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Subtle volt text shadow for headings in dark mode */
+.dark .volt-text-glow {
+  text-shadow: 0 0 30px rgba(204, 255, 0, 0.1);
+}
+
+/* Header stripe decoration in dark mode */
+.dark .dark-header-stripe {
+  background: repeating-linear-gradient(
+    to right,
+    #0a0b10,
+    #0a0b10 75px,
+    #16181f 75px,
+    #16181f 150px
+  ) !important;
+  position: relative;
+}
+
+.dark .dark-header-stripe::before,
+.dark .dark-header-stripe::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 55px;
+  background: #ccff00;
+  z-index: 10;
+  filter: drop-shadow(0 0 6px rgba(204, 255, 0, 0.7));
+}
+
+.dark .dark-header-stripe::before {
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, 65% 100%, 0 100%);
+}
+
+.dark .dark-header-stripe::after {
+  right: 0;
+  clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
+}

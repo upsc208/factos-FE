@@ -1,0 +1,13 @@
+[2026-04-28T05:50:22.056Z] Error: Request failed with status 500: fetch failed
+Stack:
+Error: Request failed with status 500: fetch failed
+    at getSpecData (file:///C:/Users/User/Desktop/temp/aleti-news-FE/node_modules/@hey-api/openapi-ts/dist/src-ErSC87Z1.mjs:81:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 0)
+    at async createClient$1 (file:///C:/Users/User/Desktop/temp/aleti-news-FE/node_modules/@hey-api/openapi-ts/dist/src-ErSC87Z1.mjs:88:20)
+    at async file:///C:/Users/User/Desktop/temp/aleti-news-FE/node_modules/@hey-api/openapi-ts/dist/src-ErSC87Z1.mjs:212:12
+    at async Promise.all (index 0)
+    at async createClient (file:///C:/Users/User/Desktop/temp/aleti-news-FE/node_modules/@hey-api/openapi-ts/dist/src-ErSC87Z1.mjs:210:21)
+    at async Command.<anonymous> (file:///C:/Users/User/Desktop/temp/aleti-news-FE/node_modules/@hey-api/openapi-ts/dist/run.mjs:35:8)
+    at async Command.parseAsync (C:\Users\User\Desktop\temp\aleti-news-FE\node_modules\commander\lib\command.js:1122:5)
+    at async runCli (file:///C:/Users/User/Desktop/temp/aleti-news-FE/node_modules/@hey-api/openapi-ts/dist/run.mjs:39:3)
