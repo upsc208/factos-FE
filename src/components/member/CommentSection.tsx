@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { MessageCircle, Trash2, UserCircle2 } from 'lucide-react';
+import { Ban, MessageCircle, ShieldX, Trash2, UserCircle2 } from 'lucide-react';
 import { useMember } from './MemberProvider';
 import LoginButtons from './LoginButtons';
+import SuspendForm from './SuspendForm';
+import { formatDateTime, moderatorDeleteComment } from '@/lib/moderation';
 import { ApiError, deleteComment, fetchComments, postComment, teamLabel, type Comment } from '@/lib/member';
 
 const MAX_LENGTH = 500; // 백엔드 CommentController.MAX_LENGTH와 같게
@@ -25,6 +27,11 @@ export default function CommentSection({ articleId }: { articleId: number }) {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [posting, setPosting] = useState(false);
+  const [suspending, setSuspending] = useState<number | null>(null); // 정지 폼을 연 댓글
+  const [notice, setNotice] = useState('');
+
+  // 정지 중이면 쓰기 칸 대신 안내 (서버도 403으로 막는다)
+  const suspended = member?.suspendedUntil ? member : null; // 서버는 정지 중일 때만 이 값을 준다
 
   // 로그인 상태가 바뀌면 다시 읽는다 — "내 댓글"(삭제 버튼) 표시가 달라진다
   const load = useCallback(() => {
@@ -53,6 +60,22 @@ export default function CommentSection({ articleId }: { articleId: number }) {
     }
   };
 
+  const dropComment = (id: number) => {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+    setTotal((t) => t - 1);
+  };
+
+  // 관리자 삭제 (남의 댓글)
+  const moderatorRemove = async (id: number) => {
+    if (!window.confirm('이 댓글을 삭제할까요?')) return;
+    try {
+      await moderatorDeleteComment(id);
+      dropComment(id);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : '댓글을 지우지 못했습니다.');
+    }
+  };
+
   const remove = async (id: number) => {
     try {
       await deleteComment(id);
@@ -71,7 +94,12 @@ export default function CommentSection({ articleId }: { articleId: number }) {
       </h3>
 
       {/* 작성 */}
-      {memberLoading ? null : member ? (
+      {memberLoading ? null : suspended ? (
+        <div className="mb-8 p-5 rounded-2xl bg-red-50 dark:bg-red-500/10 text-sm text-red-700 dark:text-red-300">
+          <p className="font-bold flex items-center gap-1.5"><Ban size={16} /> {formatDateTime(suspended.suspendedUntil!)}까지 댓글 작성이 정지됐어요</p>
+          {suspended.suspensionReason && <p className="mt-1 text-red-600/80 dark:text-red-300/80">사유: {suspended.suspensionReason}</p>}
+        </div>
+      ) : member ? (
         <div className="mb-8">
           <textarea
             value={text}
@@ -100,6 +128,7 @@ export default function CommentSection({ articleId }: { articleId: number }) {
         </div>
       )}
       {error && <p className="mb-6 text-sm text-red-500">{error}</p>}
+      {notice && <p className="mb-6 text-sm text-emerald-600">{notice}</p>}
 
       {/* 목록 */}
       {loaded && comments.length === 0 && (
@@ -133,8 +162,36 @@ export default function CommentSection({ articleId }: { articleId: number }) {
                     <Trash2 size={14} />
                   </button>
                 )}
+                {/* 관리자: 남의 댓글 삭제·작성자 정지 (자기 팀 기사만 — moderatable은 서버가 정한다) */}
+                {c.moderatable && !c.mine && (
+                  <span className="ml-auto flex items-center gap-2">
+                    <button type="button" onClick={() => moderatorRemove(c.id)} className="text-gray-400 hover:text-red-500" title="관리자 삭제">
+                      <Trash2 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setSuspending(suspending === c.id ? null : c.id); setNotice(''); }}
+                      className="text-gray-400 hover:text-red-500"
+                      title="작성자 정지"
+                    >
+                      <ShieldX size={14} />
+                    </button>
+                  </span>
+                )}
               </div>
               <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">{c.content}</p>
+              {suspending === c.id && (
+                <SuspendForm
+                  commentId={c.id}
+                  nickname={c.nickname}
+                  onCancel={() => setSuspending(null)}
+                  onDone={(deleted) => {
+                    setSuspending(null);
+                    if (deleted) dropComment(c.id);
+                    setNotice(`${c.nickname} 님을 정지했어요. 관리자 페이지에서 확인할 수 있어요.`);
+                  }}
+                />
+              )}
             </div>
           </li>
         ))}

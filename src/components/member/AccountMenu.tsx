@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, LogIn, LogOut, Settings, UserCircle2 } from 'lucide-react';
+import { Bookmark, LogIn, LogOut, Settings, ShieldCheck, UserCircle2 } from 'lucide-react';
 import { useMember } from './MemberProvider';
-import { teamLabel } from '@/lib/member';
+import { isModerator, teamLabel } from '@/lib/member';
 import LoginButtons from './LoginButtons';
 
 interface AccountMenuProps {
@@ -60,6 +60,15 @@ export default function AccountMenu({ clubId, linkClassName }: AccountMenuProps)
                 >
                   <Bookmark size={16} /> 즐겨찾기
                 </Link>
+                {isModerator(member) && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 dark:hover:bg-white/10"
+                  >
+                    <ShieldCheck size={16} /> 관리자
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={async () => { setOpen(false); await logout(); }}

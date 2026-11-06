@@ -25,6 +25,10 @@ export const TEAM_OPTIONS: { id: FavoriteTeam; label: string }[] = [
 
 export const teamLabel = (id?: string | null) => TEAM_OPTIONS.find((t) => t.id === id)?.label;
 
+export type MemberRole = 'MEMBER' | 'TEAM_ADMIN' | 'ADMIN';
+
+export const isModerator = (m?: Member | null) => !!m && (m.role === 'TEAM_ADMIN' || m.role === 'ADMIN');
+
 export interface Member {
   id: number;
   nickname: string;
@@ -32,6 +36,10 @@ export interface Member {
   provider: 'KAKAO' | 'GOOGLE';
   favoriteTeam?: FavoriteTeam | null;
   signupCompleted: boolean; // false면 /signup에서 닉네임·응원팀을 정해야 한다
+  role?: MemberRole; // 관리자 권한. 없으면 일반 회원
+  adminClub?: string | null; // 팀 관리자가 맡은 팀
+  suspendedUntil?: string | null; // 정지 중이면 끝나는 시각 (댓글 작성 불가)
+  suspensionReason?: string | null;
 }
 
 export interface Comment {
@@ -42,6 +50,7 @@ export interface Comment {
   createdAt: string;
   mine: boolean;
   favoriteTeam?: FavoriteTeam | null;
+  moderatable?: boolean; // 보는 사람이 이 댓글을 지우고 작성자를 정지할 수 있는 관리자인지
 }
 
 export interface NicknameCheck {
@@ -69,7 +78,7 @@ export class ApiError extends Error {
   }
 }
 
-async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     credentials: 'include',
