@@ -11,6 +11,7 @@
     "api": "npm run generate-api"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.0.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "lucide-react": "^1.8.0",

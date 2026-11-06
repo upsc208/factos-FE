@@ -5,7 +5,10 @@ import { Suspense } from 'react';
 import { getTweet } from 'react-tweet/api';
 import TwitterEmbed from '@/components/TwitterEmbed';
 import { getNewsDetail } from '@/client/sdk.gen';
+import { displayTitle, type ClubNewsDetailExtras } from '@/lib/clubNews';
 import ShareButton from '@/components/ShareButton';
+import BookmarkButton from '@/components/member/BookmarkButton';
+import CommentSection from '@/components/member/CommentSection';
 import { Metadata } from 'next';
 import { CLUBS } from '@/config/clubs';
 import { notFound } from 'next/navigation';
@@ -27,7 +30,7 @@ export async function generateMetadata({
     
     if (!news) return { title: '뉴스를 찾을 수 없습니다' };
 
-    const title = news.titleKo || '뉴스 상세';
+    const title = displayTitle(news as typeof news & ClubNewsDetailExtras) || '뉴스 상세';
     const contentPreview = news.contentKo ? news.contentKo.substring(0, 150) : '';
     const description = news.summaryKo || contentPreview || `${club?.nameKo || '구단'} 최신 뉴스`;
 
@@ -94,8 +97,15 @@ export default async function NewsDetailPage({
     );
   }
 
-  // AI 요약이 문자열로 들어올 경우 리스트로 변환
-  const summaryPoints = news.summaryKo ? news.summaryKo.split('\n').filter(p => p && p.trim()) : [];
+  // Big6 기사는 번역 전이면 한국어 제목·요약이 없다 → 영어 제목과 영어 핵심 문장을 보여 준다
+  const extras = news as typeof news & ClubNewsDetailExtras;
+  const isPending = extras.translationStatus === 'PENDING';
+  const title = displayTitle(extras) || '제목 없음';
+  const summaryPoints = isPending
+    ? (extras.keySentencesEn ?? [])
+    : news.summaryKo ? news.summaryKo.split('\n').filter(p => p && p.trim()) : [];
+  // Big6 기사는 본문 번역이 없다 (핵심 문장만 번역). 본문 칸은 기존 기사에만 보인다
+  const hasContent = !!news.contentKo && news.contentKo !== '본문 내용이 없습니다.';
   
   // 날짜 처리 안전하게
   let formattedDate = '날짜 정보 없음';
@@ -194,8 +204,13 @@ export default async function NewsDetailPage({
       <article className="container mx-auto px-4 pt-8 sm:pt-12 max-w-3xl">
         <header className="mb-8 sm:mb-10">
           <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white leading-[1.15] mb-6 sm:mb-8 tracking-tight font-bebas uppercase">
-            {news.titleKo || '제목 없음'}
+            {title}
           </h1>
+          {isPending && (
+            <p className="-mt-3 mb-6 text-sm font-semibold text-gray-500 dark:text-gray-400">
+              번역 중인 기사입니다. 잠시 후 한국어로 바뀝니다.
+            </p>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-y border-gray-100 dark:border-white/5 py-4 sm:py-6 gap-6">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -229,7 +244,8 @@ export default async function NewsDetailPage({
               )}
               <div className="flex items-center gap-2">
                 <div className="h-6 w-px bg-gray-100 dark:bg-white/10 sm:mx-1" />
-                <ShareButton title={news.titleKo || ''} />
+                <BookmarkButton articleId={news.id} />
+                <ShareButton title={title} />
               </div>
             </div>
           </div>
@@ -242,7 +258,7 @@ export default async function NewsDetailPage({
             </div>
             <h2 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: 'var(--primary)' }}>
               <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: 'var(--primary)' }}></div>
-              AI 핵심 요약
+              {isPending ? '핵심 문장 (원문)' : '핵심 요약'}
             </h2>
             <ul className="space-y-4">
               {summaryPoints.map((point, index) => (
@@ -260,7 +276,7 @@ export default async function NewsDetailPage({
             <div className="relative h-[300px] sm:h-[450px] w-full overflow-hidden rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none mb-3 border border-gray-100 dark:border-white/5 bg-white/20">
               <Image
                 src={news.imageUrl}
-                alt={news.titleKo || '뉴스 이미지'}
+                alt={title}
                 fill
                 className="object-cover"
                 unoptimized
@@ -274,9 +290,11 @@ export default async function NewsDetailPage({
           </div>
         )}
 
-        <div className="prose prose-xl max-w-none text-gray-800 dark:text-gray-200 leading-[2] mb-20 whitespace-pre-wrap font-medium text-lg sm:text-xl font-kanit">
-          {news.contentKo || '내용이 없습니다.'}
-        </div>
+        {hasContent && (
+          <div className="prose prose-xl max-w-none text-gray-800 dark:text-gray-200 leading-[2] mb-20 whitespace-pre-wrap font-medium text-lg sm:text-xl font-kanit">
+            {news.contentKo}
+          </div>
+        )}
 
         {/* SNS 포스트인 경우 트윗 렌더링 */}
         {news.articleType === 'SNS_POST' && news.originalUrl && (news.originalUrl.includes('x.com') || news.originalUrl.includes('twitter.com')) && (
@@ -303,6 +321,8 @@ export default async function NewsDetailPage({
             </div>
           </div>
         )}
+
+        <CommentSection articleId={news.id} />
 
         <footer className="pt-10 border-t border-gray-100 dark:border-white/5">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">

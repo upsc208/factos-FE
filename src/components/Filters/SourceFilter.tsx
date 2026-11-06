@@ -3,10 +3,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { Check } from 'lucide-react';
-import { NewsSource } from '@/client/types.gen';
+import type { ClubSource } from '@/lib/clubNews';
 
 interface SourceFilterProps {
-  allSources: NewsSource[];
+  allSources: ClubSource[];
 }
 
 export default function SourceFilter({ allSources }: SourceFilterProps) {

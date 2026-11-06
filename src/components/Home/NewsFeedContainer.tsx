@@ -3,9 +3,10 @@
 import { useState, Suspense } from 'react';
 import { ChevronRight } from 'lucide-react';
 import SourceFilter from '@/components/Filters/SourceFilter';
+import type { ClubSource } from '@/lib/clubNews';
 
 interface NewsFeedContainerProps {
-  sourcesData: any[];
+  sourcesData: ClubSource[];
   children: React.ReactNode;
 }
 

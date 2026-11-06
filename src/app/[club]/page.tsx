@@ -1,8 +1,8 @@
-import { getNews, getSources, getRecentMatch, getUpcomingMatches, getLatestBriefing, getTransferRanking } from '@/client/sdk.gen';
+import { getRecentMatch, getUpcomingMatches, getLatestBriefing, getTransferRanking } from '@/client/sdk.gen';
+import { getClubNews, getClubSources, type ClubNewsPage, type ClubSource } from '@/lib/clubNews';
 import NewsCard from '@/components/NewsCard';
 import NewsFeedContainer from '@/components/Home/NewsFeedContainer';
 import SearchBar from '@/components/Filters/SearchBar';
-import CategoryFilter from '@/components/Filters/CategoryFilter';
 import Pagination from '@/components/Pagination';
 import { Newspaper, Sparkles } from 'lucide-react';
 import MatchResultCard from '@/components/Home/MatchResultCard';
@@ -16,7 +16,7 @@ export default async function Home({
   searchParams: searchParamsPromise,
 }: {
   params: Promise<{ club: string }>;
-  searchParams: Promise<{ page?: string; size?: string; query?: string; sources?: string; category?: string; isHyped?: string }>;
+  searchParams: Promise<{ page?: string; size?: string; query?: string; sources?: string }>;
 }) {
   const params = await paramsPromise;
   const clubId = params.club;
@@ -32,13 +32,13 @@ export default async function Home({
   const sizeRaw = parseInt(searchParams.size || '10');
   const size = isNaN(sizeRaw) ? 10 : sizeRaw;
   const query = searchParams.query || '';
-  const category = searchParams.category || '';
   const sourcesParam = searchParams.sources || '';
-  const sources = sourcesParam ? sourcesParam.split(',') : [];
-  const isHyped = searchParams.isHyped === 'true';
+  // SourceFilter는 전부 해제하면 'none'을 넣는다 → 서버에 묻지 않고 빈 목록
+  const noSourceSelected = sourcesParam === 'none';
+  const sources = sourcesParam && !noSourceSelected ? sourcesParam.split(',') : [];
 
-  let newsData = null;
-  let sourcesData: any[] = [];
+  let newsData: ClubNewsPage | null = null;
+  let sourcesData: ClubSource[] = [];
   let recentMatchData = null;
   let upcomingMatchesData: any[] = [];
   let briefingData = null;
@@ -47,19 +47,9 @@ export default async function Home({
   try {
     // Fetch news and sources in parallel using allSettled for robustness
     const results = await Promise.allSettled([
-      getNews({
-        path: { clubCode: club.clubCode },
-        query: {
-          page: page,
-          size: size,
-          search: query,
-          ...(category && category !== 'all' ? { category } : {}),
-          ...(sourcesParam && sourcesParam !== 'none' ? { sources } : {})
-        }
-      }),
-      getSources({
-        path: { clubCode: club.clubCode }
-      }),
+      // 팀별 목록 (BBC·Sky 기사 + 기자 트윗)
+      noSourceSelected ? Promise.resolve(null) : getClubNews(club.id, page, size, { sources, search: query }),
+      getClubSources(club.id),
       getRecentMatch({
         path: { clubCode: club.clubCode }
       }),
@@ -74,8 +64,8 @@ export default async function Home({
       })
     ]);
 
-    if (results[0].status === 'fulfilled') newsData = results[0].value.data;
-    if (results[1].status === 'fulfilled') sourcesData = results[1].value.data || [];
+    if (results[0].status === 'fulfilled') newsData = results[0].value;
+    if (results[1].status === 'fulfilled') sourcesData = results[1].value;
     if (results[2].status === 'fulfilled') recentMatchData = results[2].value.data || null;
     if (results[3].status === 'fulfilled') upcomingMatchesData = results[3].value.data || [];
     if (results[4].status === 'fulfilled') briefingData = results[4].value.data || null;
@@ -85,9 +75,9 @@ export default async function Home({
     console.error('Unexpected error during data fetch:', error);
   }
 
-  let newsList = (newsData as any)?.content || [];
-  let totalPages = (newsData as any)?.totalPages || 0;
-  const currentPage = ((newsData as any)?.number || 0) + 1;
+  const newsList = newsData?.content ?? [];
+  const totalPages = newsData?.totalPages ?? 0;
+  const currentPage = (newsData?.number ?? 0) + 1;
 
   return (
     <div className="flex flex-col gap-0 pt-10">
@@ -111,9 +101,7 @@ export default async function Home({
           <Suspense fallback={<div className="h-14 w-full bg-gray-100 animate-pulse rounded-2xl mb-12" />}>
             <SearchBar />
           </Suspense>
-          <Suspense fallback={<div className="h-10 w-full bg-gray-100 animate-pulse rounded-full mb-8" />}>
-            <CategoryFilter />
-          </Suspense>
+          {/* 카테고리 필터는 뺐다 — Big6 기사는 카테고리 분류를 하지 않는다 (CategoryFilter 컴포넌트는 남겨 둠) */}
         </div>
 
         <NewsFeedContainer sourcesData={sourcesData}>

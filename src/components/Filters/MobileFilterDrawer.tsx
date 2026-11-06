@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Filter, X } from 'lucide-react';
-import { NewsSource } from '@/client/types.gen';
+import type { ClubSource } from '@/lib/clubNews';
 import SourceFilter from './SourceFilter';
 
 interface MobileFilterDrawerProps {
-  allSources: NewsSource[];
+  allSources: ClubSource[];
 }
 
 export default function MobileFilterDrawer({ allSources }: MobileFilterDrawerProps) {

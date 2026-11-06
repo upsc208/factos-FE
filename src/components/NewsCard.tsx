@@ -1,27 +1,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ExternalLink, User, ImageIcon, Sparkles, Clock } from 'lucide-react';
-import { NewsListResponse } from '@/client/types.gen';
+import { ExternalLink, User, ImageIcon, Sparkles, Clock, Languages } from 'lucide-react';
 import { ClubConfig } from '@/config/clubs';
+import { ClubNewsItem, displayTitle } from '@/lib/clubNews';
 
 interface NewsCardProps {
-  news: NewsListResponse;
+  news: ClubNewsItem;
   showImage?: boolean;
   fromPage?: number;
   club: ClubConfig;
 }
 
 export default function NewsCard({ news, showImage = false, fromPage, club }: NewsCardProps) {
-  const getArticleTypeText = (type: string) => {
-    switch (type) {
-      case 'WEB_ARTICLE': return '웹 기사';
-      case 'SNS_POST': return 'X 기사';
-      default: return '기타';
-    }
-  };
-
-  // Type assertion for imageUrl since it's missing in NewsListResponse type but expected in data
-  const imageUrl = (news as any).imageUrl;
+  const imageUrl = news.imageUrl;
+  const isPending = news.translationStatus === 'PENDING';
+  const isTweet = news.articleType === 'SNS_POST';
+  const title = displayTitle(news);
+  // 트윗은 본문이 곧 제목이라 요약 칸을 따로 두지 않는다
+  const summary = isTweet ? '' : news.keySentences.join(' ');
 
   return (
     <Link
@@ -43,7 +39,7 @@ export default function NewsCard({ news, showImage = false, fromPage, club }: Ne
             {imageUrl ? (
               <img
                 src={imageUrl}
-                alt={news.titleKo || ''}
+                alt={title}
                 className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-1000"
               />
             ) : (
@@ -68,8 +64,20 @@ export default function NewsCard({ news, showImage = false, fromPage, club }: Ne
 
             <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] lg:text-[13px] font-extrabold uppercase tracking-tighter text-gray-500 dark:text-gray-400">
               <User size={16} style={{ color: 'var(--primary)' }} />
-              <span className="truncate max-w-[100px] sm:max-w-none font-kanit">{news.authorName || 'NEWS'}</span>
+              <span className="truncate max-w-[100px] sm:max-w-none font-kanit">
+                {isTweet && news.authorName ? `@${news.authorName}` : news.authorName || 'NEWS'}
+              </span>
             </div>
+
+            {isPending && (
+              <span
+                className="flex items-center gap-1 text-[11px] sm:text-[12px] font-bold text-gray-500 dark:text-gray-400 px-2 py-1 rounded-md bg-gray-100 dark:bg-white/[0.06]"
+                title="번역이 끝나면 한국어로 바뀝니다"
+              >
+                <Languages size={14} />
+                번역 중
+              </span>
+            )}
 
             <div className="w-1 h-1 rounded-full bg-gray-300 hidden xs:block" />
 
@@ -90,20 +98,20 @@ export default function NewsCard({ news, showImage = false, fromPage, club }: Ne
           </div>
 
           <h3 className="mb-5 text-2xl sm:text-3xl lg:text-[2rem] font-black text-gray-900 dark:text-white transition-colors line-clamp-2 leading-[1.2] tracking-tight group-hover:text-primary">
-            {news.titleKo}
+            {title}
           </h3>
 
-          {news.summaryKo && (
+          {summary && (
             <div 
               className="relative p-5 sm:p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border-l-4 transition-all hidden xs:block shadow-inner"
               style={{ borderLeftColor: 'var(--primary)' }}
             >
               <div className="flex items-center gap-2 mb-3" style={{ color: 'var(--primary)' }}>
                 <Sparkles size={18} className="fill-current" />
-                <span className="text-[11px] lg:text-[12px] font-bebas tracking-[0.2em] uppercase">AI Insight</span>
+                <span className="text-[11px] lg:text-[12px] font-bebas tracking-[0.2em] uppercase">Key Points</span>
               </div>
               <p className="text-base lg:text-[1.1rem] text-gray-600 dark:text-gray-300 line-clamp-2 font-bold leading-relaxed font-kanit">
-                {news.summaryKo}
+                {summary}
               </p>
             </div>
           )}

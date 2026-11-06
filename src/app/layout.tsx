@@ -3,6 +3,7 @@ import { Bebas_Neue, Kanit, Great_Vibes } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import DarkModeToggle from "@/components/DarkModeToggle";
+import MemberProvider from "@/components/member/MemberProvider";
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
@@ -49,7 +50,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#0a0b10] text-gray-950 dark:text-gray-100 font-sans overflow-x-hidden transition-colors duration-300 dark-geo-pattern antialiased">
         <ThemeProvider>
-          {children}
+          <MemberProvider>{children}</MemberProvider>
           <Analytics />
           <SpeedInsights />
           <DarkModeToggle />
