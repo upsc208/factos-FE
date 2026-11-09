@@ -67,6 +67,7 @@ jobs:
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           build-args: |
             NEXT_PUBLIC_API_URL=
+            NEXT_PUBLIC_TRAVEL_API_URL=
             NEXT_PUBLIC_SITE_URL=${{ vars.SITE_URL || 'https://fipa-news.kr' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

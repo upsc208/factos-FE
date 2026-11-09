@@ -15,7 +15,10 @@ FROM node:22-alpine AS build
 WORKDIR /app
 ARG NEXT_PUBLIC_API_URL=""
 ARG NEXT_PUBLIC_SITE_URL="https://fipa-news.kr"
+# travel-svc도 같은 출처(/api/travel, nginx가 넘긴다)
+ARG NEXT_PUBLIC_TRAVEL_API_URL=""
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_TRAVEL_API_URL=$NEXT_PUBLIC_TRAVEL_API_URL \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules

@@ -19,3 +19,14 @@ export function apiBase(): string {
   // 빈 문자열은 "같은 출처"라는 뜻이라 ?? 로 받는다
   return trim(PUBLIC_API_URL ?? 'http://localhost:8080');
 }
+
+/**
+ * travel-svc 주소 (브라우저에서만 부른다 — 로그인 쿠키가 브라우저에만 있다).
+ * 운영은 빈 값 → 같은 출처 `/api/travel` (nginx가 travel-svc로 넘긴다). 로컬 개발은 8090.
+ * 로그인 쿠키는 football-svc가 심은 것을 그대로 쓴다 (같은 도메인이라 같이 실린다).
+ */
+const PUBLIC_TRAVEL_API_URL = process.env.NEXT_PUBLIC_TRAVEL_API_URL;
+
+export function travelApiBase(): string {
+  return trim(PUBLIC_TRAVEL_API_URL ?? 'http://localhost:8090');
+}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AccountMenu from '@/components/member/AccountMenu';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Newspaper, Info, Sparkles, Ticket, ShoppingBag, ChevronDown, MessagesSquare } from 'lucide-react';
+import { Newspaper, Info, Sparkles, Ticket, ShoppingBag, ChevronDown, MessagesSquare, Plane } from 'lucide-react';
 import { CLUBS, CLUB_ORDER } from '@/config/clubs';
 
 export default function Header({ clubId: propClubId }: { clubId?: string }) {
@@ -368,6 +368,12 @@ export default function Header({ clubId: propClubId }: { clubId?: string }) {
             <Link href={`/${club.id}/chat`} className={navLinkClass}>
               <MessagesSquare className="w-5 h-5" />
               <span className="tracking-tight">채팅</span>
+            </Link>
+          )}
+          {club && (
+            <Link href={`/${club.id}/travel`} className={navLinkClass}>
+              <Plane className="w-5 h-5" />
+              <span className="tracking-tight">여행</span>
             </Link>
           )}
           <Link href="/about" className={navLinkClass}>
