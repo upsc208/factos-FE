@@ -1,4 +1,5 @@
 import type { ClubNewsPage } from '@/lib/clubNews';
+import { apiBase } from '@/config/api';
 
 /**
  * 회원 기능 (로그인·댓글·즐겨찾기) API. **브라우저에서만** 부른다.
@@ -8,7 +9,8 @@ import type { ClubNewsPage } from '@/lib/clubNews';
  * 쿠키가 실리려면 프론트와 API가 같은 사이트여야 한다 (localhost끼리, 또는 factos.kr / api.factos.kr).
  */
 
-export const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+// 브라우저와 서버(SSR)가 다른 주소를 쓴다 — config/api.ts. 운영 브라우저에서는 빈 값(같은 출처 /api)
+export const API_BASE = apiBase();
 
 /** 응원하는 팀: Big6(config/clubs의 id) + 기타 */
 export type FavoriteTeam = 'arsenal' | 'chelsea' | 'liverpool' | 'mancity' | 'manutd' | 'tottenham' | 'other';

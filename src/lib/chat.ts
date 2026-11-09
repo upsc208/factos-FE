@@ -101,5 +101,7 @@ export function saveChatNickname(nickname: string) {
  * `/ws/websocket`에서 받는다. 그래서 sockjs-client 없이 붙는다.
  */
 export function chatSocketUrl(): string {
+  // 운영은 API가 같은 출처(빈 값)라 지금 페이지 주소로 만든다
+  if (!API_BASE) return `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/websocket`;
   return API_BASE.replace(/^http/, 'ws') + '/ws/websocket';
 }
