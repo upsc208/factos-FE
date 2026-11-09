@@ -22,7 +22,7 @@ export const BriefingSection = ({ briefing, clubName, createdAt }: BriefingSecti
             </h3>
             <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest flex items-center gap-1">
               <Clock size={10} />
-              최근 8시간 업데이트
+              6시간마다 업데이트
             </p>
           </div>
         </div>
@@ -54,7 +54,7 @@ export const BriefingSection = ({ briefing, clubName, createdAt }: BriefingSecti
           <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 opacity-50">
             <Info size={32} />
             <p className="text-sm font-bold uppercase tracking-widest">
-              No recent briefings available
+              아직 브리핑이 없어요
             </p>
           </div>
         )}

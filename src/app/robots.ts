@@ -1,12 +1,14 @@
 import { MetadataRoute } from 'next';
+import { SITE_URL } from '@/config/site';
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: '/private/', // 예시: 비공개 페이지가 있다면 추가
+      // 로그인한 사람만 의미 있는 화면
+      disallow: ['/me', '/signup', '/admin', '/*/bookmarks'],
     },
-    sitemap: 'https://atleti.kr/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

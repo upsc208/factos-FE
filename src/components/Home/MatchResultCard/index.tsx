@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { RecentMatch, UpcomingMatch, BriefingResponse } from '@/client/types.gen';
+import type { Briefing } from '@/lib/matches';
+import type { RecentMatch, UpcomingMatch } from '@/lib/matches';
+import { RatingsSection } from './RatingsSection';
 import { sortScorers } from './utils';
 import { ScoreSection } from './ScoreSection';
 import { ScorersSection } from './ScorersSection';
@@ -11,34 +13,23 @@ import { StatsSection } from './StatsSection';
 import { TacticalField } from './TacticalField';
 import { MatchEvents } from './MatchEvents';
 import { BriefingSection } from './BriefingSection';
-import { TransferProbabilitySection } from './TransferProbabilitySection';
 import { ClubConfig } from '@/config/clubs';
-import type { PlayerTransferProbability } from '@/client/types.gen';
 
 interface MatchResultCardProps {
   recentMatch?: RecentMatch | null;
   upcomingMatches?: UpcomingMatch[] | null;
-  briefing?: BriefingResponse | null;
-  transferRanking?: PlayerTransferProbability[] | null;
+  briefing?: Briefing | null;
   club: ClubConfig;
 }
 
-export default function MatchResultCard({ recentMatch, upcomingMatches, briefing, transferRanking, club }: MatchResultCardProps) {
+export default function MatchResultCard({ recentMatch, upcomingMatches, briefing, club }: MatchResultCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeSlide, setActiveSlide] = useState<'briefing' | 'transfer' | 'match'>('briefing');
+  // 슬라이드 두 장: 팀 브리핑 5줄 ↔ 경기. 브리핑이 아직 없으면 경기부터 보여 준다
+  const hasBriefing = (briefing?.content?.length ?? 0) > 0;
+  const [activeSlide, setActiveSlide] = useState<'briefing' | 'match'>(hasBriefing ? 'briefing' : 'match');
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  // Handle window resize to detect mobile/desktop
-  React.useEffect(() => {
-    setMounted(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const toggleSlide = () => setActiveSlide((s) => (s === 'briefing' ? 'match' : 'briefing'));
 
   // Minimum swipe distance (in px)
   const minSwipeDistance = 50;
@@ -52,31 +43,10 @@ export default function MatchResultCard({ recentMatch, upcomingMatches, briefing
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
+  // 두 장이라 어느 쪽으로 밀어도 다른 장으로
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
-      // Swipe Left -> Next Slide
-      if (activeSlide === 'briefing') {
-        setActiveSlide(isMobile ? 'transfer' : 'match');
-      } else if (activeSlide === 'transfer') {
-        setActiveSlide('match');
-      } else if (activeSlide === 'match') {
-        setActiveSlide('briefing');
-      }
-    } else if (isRightSwipe) {
-      // Swipe Right -> Prev Slide
-      if (activeSlide === 'match') {
-        setActiveSlide(isMobile ? 'transfer' : 'briefing');
-      } else if (activeSlide === 'transfer') {
-        setActiveSlide('briefing');
-      } else if (activeSlide === 'briefing') {
-        setActiveSlide('match');
-      }
-    }
+    if (Math.abs(touchStart - touchEnd) > minSwipeDistance) toggleSlide();
   };
 
   const getCardBackground = () => {
@@ -137,33 +107,14 @@ export default function MatchResultCard({ recentMatch, upcomingMatches, briefing
       <div className="relative z-10 flex flex-col">
         {/* Fixed Height Content Area */}
         <div className="h-[360px] flex flex-col overflow-hidden relative">
-          {/* Briefing Slide (Desktop: Briefing + Transfer / Mobile: Briefing only) */}
+          {/* Briefing Slide */}
           {activeSlide === 'briefing' && (
-            <div className="flex-grow overflow-y-auto md:overflow-hidden scrollbar-hide p-6 md:p-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="h-full flex flex-col md:flex-row gap-8 md:gap-12 items-start justify-start">
-                <div className="w-full md:w-[79%] flex flex-col h-full pr-0 md:pr-8 md:border-r border-white/20">
-                  <BriefingSection 
-                    briefing={briefing?.content || []} 
-                    clubName={club.nameKo} 
-                    createdAt={briefing?.createdAt}
-                  />
-                </div>
-                {/* Desktop view: side-by-side / Mobile view: hidden in this slide */}
-                <div className="hidden md:flex md:w-[21%] flex-col h-full">
-                  <TransferProbabilitySection players={transferRanking || []} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Transfer Slide (Mobile only) */}
-          {activeSlide === 'transfer' && (
-            <div className="flex-grow overflow-y-auto scrollbar-hide p-6 md:p-8 animate-in fade-in slide-in-from-right-4 duration-500 md:hidden">
-              <div className="min-h-full flex flex-col items-start justify-start">
-                <div className="w-full flex flex-col h-full">
-                  <TransferProbabilitySection players={transferRanking || []} />
-                </div>
-              </div>
+            <div className="flex-grow overflow-y-auto scrollbar-hide p-6 md:p-8 animate-in fade-in slide-in-from-right-4 duration-500">
+              <BriefingSection
+                briefing={briefing?.content || []}
+                clubName={club.nameKo}
+                createdAt={briefing?.createdAt}
+              />
             </div>
           )}
 
@@ -184,7 +135,7 @@ export default function MatchResultCard({ recentMatch, upcomingMatches, briefing
                   <ScorersSection homeScorers={homeScorers} awayScorers={awayScorers} />
                   <div className="order-4 md:order-3 border-t border-white/20 mb-8 mx-2"></div>
                 </div>
-                <UpcomingSection upcomingMatches={upcomingMatches} />
+                <UpcomingSection upcomingMatches={upcomingMatches} clubId={club.id} />
               </div>
             ) : (
               <div className="flex-grow p-6 md:p-8 flex flex-col items-center justify-center text-center space-y-4 opacity-50">
@@ -197,29 +148,22 @@ export default function MatchResultCard({ recentMatch, upcomingMatches, briefing
 
         {/* Carousel Controls - Nav Arrows */}
         <div className="absolute inset-y-0 left-0 right-0 pointer-events-none flex items-center justify-between px-3 z-30">
-          {/* Left Arrow (Prev) */}
           <div className="flex items-center">
-            {(isMobile ? (activeSlide === 'transfer' || activeSlide === 'match') : (activeSlide === 'match')) && (
-              <button 
-                onClick={() => {
-                  if (activeSlide === 'match') setActiveSlide(isMobile ? 'transfer' : 'briefing');
-                  else if (activeSlide === 'transfer') setActiveSlide('briefing');
-                }}
+            {activeSlide === 'match' && (
+              <button
+                onClick={() => setActiveSlide('briefing')}
+                aria-label="브리핑 보기"
                 className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/80 hover:text-white transition-all pointer-events-auto backdrop-blur-sm shadow-lg"
               >
                 <ChevronLeft size={20} strokeWidth={3} />
               </button>
             )}
           </div>
-
-          {/* Right Arrow (Next) */}
           <div className="flex items-center">
-            {(isMobile ? (activeSlide === 'briefing' || activeSlide === 'transfer') : (activeSlide === 'briefing')) && (
-              <button 
-                onClick={() => {
-                  if (activeSlide === 'briefing') setActiveSlide(isMobile ? 'transfer' : 'match');
-                  else if (activeSlide === 'transfer') setActiveSlide('match');
-                }}
+            {activeSlide === 'briefing' && (
+              <button
+                onClick={() => setActiveSlide('match')}
+                aria-label="경기 보기"
                 className="p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/80 hover:text-white transition-all pointer-events-auto backdrop-blur-sm shadow-lg"
               >
                 <ChevronRight size={20} strokeWidth={3} />
@@ -230,21 +174,14 @@ export default function MatchResultCard({ recentMatch, upcomingMatches, briefing
 
         {/* Carousel Dots */}
         <div className="flex justify-center gap-2 pb-4">
-          <button 
-            onClick={() => setActiveSlide('briefing')}
-            className={`w-2 h-2 rounded-full transition-all ${activeSlide === 'briefing' ? 'bg-white w-4' : 'bg-white/30'}`}
-          />
-          {/* Only show Transfer dot on mobile - use mounted check to prevent hydration mismatch */}
-          {mounted && isMobile && (
-            <button 
-              onClick={() => setActiveSlide('transfer')}
-              className={`w-2 h-2 rounded-full transition-all ${activeSlide === 'transfer' ? 'bg-white w-4' : 'bg-white/30'}`}
+          {(['briefing', 'match'] as const).map((slide) => (
+            <button
+              key={slide}
+              onClick={() => setActiveSlide(slide)}
+              aria-label={slide === 'briefing' ? '브리핑' : '경기'}
+              className={`w-2 h-2 rounded-full transition-all ${activeSlide === slide ? 'bg-white w-4' : 'bg-white/30'}`}
             />
-          )}
-          <button 
-            onClick={() => setActiveSlide('match')}
-            className={`w-2 h-2 rounded-full transition-all ${activeSlide === 'match' ? 'bg-white w-4' : 'bg-white/30'}`}
-          />
+          ))}
         </div>
       </div>
 
@@ -268,9 +205,12 @@ export default function MatchResultCard({ recentMatch, upcomingMatches, briefing
 
       {/* Accordion Content (Only for match view) */}
       {activeSlide === 'match' && recentMatch && (
-        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[4000px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="p-6 md:p-8 bg-black/20 flex flex-col gap-12 border-t border-white/5">
             <StatsSection stats={recentMatch.stats} isExpanded={isExpanded} />
+            {isExpanded && (
+              <RatingsSection matchId={recentMatch.matchId} clubId={club.id} clubName={club.nameKo} playerOfTheMatch={recentMatch.playerOfTheMatch} />
+            )}
             {recentMatch.lineup && (
               <div className="flex flex-col gap-8 -mx-6 md:mx-0">
                 <h4 className="text-sm md:text-base font-black tracking-widest uppercase text-white text-center px-6">선발 명단 및 전술</h4>

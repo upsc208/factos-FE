@@ -14,6 +14,8 @@ const ThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => {},
 });
 
+const THEME_KEY = 'factos-theme';
+
 export const useTheme = () => useContext(ThemeContext);
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -22,7 +24,8 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('atleti-theme') as Theme;
+    // 'atleti-theme'은 예전 키 — 이미 고른 테마를 잃지 않게 한 번 더 본다
+    const saved = (localStorage.getItem(THEME_KEY) ?? localStorage.getItem('atleti-theme')) as Theme;
     if (saved) {
       setTheme(saved);
       document.documentElement.classList.toggle('dark', saved === 'dark');
@@ -35,7 +38,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
-    localStorage.setItem('atleti-theme', next);
+    localStorage.setItem(THEME_KEY, next);
     document.documentElement.classList.toggle('dark', next === 'dark');
   };
 

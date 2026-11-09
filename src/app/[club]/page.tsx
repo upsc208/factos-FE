@@ -1,4 +1,4 @@
-import { getRecentMatch, getUpcomingMatches, getLatestBriefing, getTransferRanking } from '@/client/sdk.gen';
+import { getClubBriefing, getClubRecentMatch, getClubUpcomingMatches, type Briefing, type RecentMatch, type UpcomingMatch } from '@/lib/matches';
 import { getClubNews, getClubSources, type ClubNewsPage, type ClubSource } from '@/lib/clubNews';
 import NewsCard from '@/components/NewsCard';
 import NewsFeedContainer from '@/components/Home/NewsFeedContainer';
@@ -39,10 +39,9 @@ export default async function Home({
 
   let newsData: ClubNewsPage | null = null;
   let sourcesData: ClubSource[] = [];
-  let recentMatchData = null;
-  let upcomingMatchesData: any[] = [];
-  let briefingData = null;
-  let transferRankingData = null;
+  let recentMatchData: RecentMatch | null = null;
+  let upcomingMatchesData: UpcomingMatch[] = [];
+  let briefingData: Briefing | null = null;
 
   try {
     // Fetch news and sources in parallel using allSettled for robustness
@@ -50,26 +49,18 @@ export default async function Home({
       // 팀별 목록 (BBC·Sky 기사 + 기자 트윗)
       noSourceSelected ? Promise.resolve(null) : getClubNews(club.id, page, size, { sources, search: query }),
       getClubSources(club.id),
-      getRecentMatch({
-        path: { clubCode: club.clubCode }
-      }),
-      getUpcomingMatches({
-        path: { clubCode: club.clubCode }
-      }),
-      getLatestBriefing({
-        path: { clubCode: club.clubCode }
-      }),
-      getTransferRanking({
-        path: { clubCode: club.clubCode }
-      })
+      // 팀별 직전 경기(상세·평점) + 다가올 경기
+      getClubRecentMatch(club.id),
+      getClubUpcomingMatches(club.id),
+      // 팀 브리핑 5줄
+      getClubBriefing(club.id),
     ]);
 
     if (results[0].status === 'fulfilled') newsData = results[0].value;
     if (results[1].status === 'fulfilled') sourcesData = results[1].value;
-    if (results[2].status === 'fulfilled') recentMatchData = results[2].value.data || null;
-    if (results[3].status === 'fulfilled') upcomingMatchesData = results[3].value.data || [];
-    if (results[4].status === 'fulfilled') briefingData = results[4].value.data || null;
-    if (results[5].status === 'fulfilled') transferRankingData = results[5].value.data || null;
+    if (results[2].status === 'fulfilled') recentMatchData = results[2].value;
+    if (results[3].status === 'fulfilled') upcomingMatchesData = results[3].value;
+    if (results[4].status === 'fulfilled') briefingData = results[4].value;
 
   } catch (error) {
     console.error('Unexpected error during data fetch:', error);
@@ -86,10 +77,9 @@ export default async function Home({
           <div className="w-full">
             <MatchResultCard 
               recentMatch={recentMatchData} 
-              upcomingMatches={upcomingMatchesData} 
+              upcomingMatches={upcomingMatchesData}
               briefing={briefingData}
-              transferRanking={transferRankingData}
-              club={club} 
+              club={club}
             />
           </div>
           <Suspense fallback={<div className="h-12 w-24 bg-gray-100 animate-pulse rounded-2xl md:hidden" />}>

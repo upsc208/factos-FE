@@ -1,75 +1,58 @@
 import { MetadataRoute } from 'next';
-import { getNews } from '@/client/sdk.gen';
+import { getClubNews } from '@/lib/clubNews';
+import { CLUB_ORDER } from '@/config/clubs';
+import { SITE_URL } from '@/config/site';
+
+// 빌드 때 한 번 만들어 굳히지 않는다 (빌드 서버에는 백엔드가 없어 기사가 0개로 굳는다). 1시간마다 다시 만든다
+export const revalidate = 3600;
+
+const PAGE_SIZE = 100; // 백엔드 NewsController.MAX_PAGE_SIZE
+const MAX_PAGES_PER_CLUB = 30; // 팀당 3,000개까지. 사이트맵 한 파일 한도(5만)보다 한참 작게
 
 /**
- * 3,000개 이상의 데이터를 안전하게 가져오기 위해 
- * 페이지네이션을 순회하며 뉴스 URL 목록을 생성합니다.
+ * 팀 페이지 6개 + 팀별 기사 상세. 기사는 팀별 목록 API(`/api/news/clubs/{club}`)에서 모은다.
+ * 여러 팀에 걸린 기사(같은 기사가 아스날·첼시 피드에 나온 경우)는 처음 나온 팀 주소 하나만 넣는다.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://atleti.kr';
-
-  // 1. 정적 페이지 정의
+  const now = new Date();
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'always',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
+    { url: SITE_URL, lastModified: now, changeFrequency: 'always', priority: 1 },
+    { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    ...CLUB_ORDER.map((club) => ({
+      url: `${SITE_URL}/${club}`,
+      lastModified: now,
+      changeFrequency: 'hourly' as const,
+      priority: 0.9,
+    })),
   ];
 
-  // 2. 동적 뉴스 페이지 URL 수집
-  let allNewsUrls: MetadataRoute.Sitemap = [];
-  const size = 500; // 한 번에 가져올 양 (백엔드 부담 최소화)
+  const seen = new Set<number>();
+  const articles: MetadataRoute.Sitemap = [];
 
-  try {
-    // 첫 번째 페이지 호출하여 전체 페이지 수 확인
-    const firstResponse = await getNews({
-      query: { page: 0, size: size }
-    } as any);
-
-    if (firstResponse.data && firstResponse.data.content) {
-      const totalPages = firstResponse.data.totalPages || 1;
-
-      // 첫 페이지 데이터 추가
-      const firstPageUrls = firstResponse.data.content.map((news) => ({
-        url: `${baseUrl}/news/${news.id}`,
-        lastModified: news.publishedAt ? new Date(news.publishedAt) : new Date(),
-        changeFrequency: 'daily' as const,
-        priority: 0.6,
-      }));
-      allNewsUrls = [...firstPageUrls];
-
-      // 나머지 페이지 병렬 호출 (부하 조절을 위해 Promise.all 사용)
-      if (totalPages > 1) {
-        const remainingPagePromises = [];
-        for (let i = 1; i < totalPages; i++) {
-          remainingPagePromises.push(getNews({ query: { page: i, size: size } } as any));
-        }
-
-        const responses = await Promise.all(remainingPagePromises);
-        responses.forEach((res) => {
-          if (res.data && res.data.content) {
-            const pageUrls = res.data.content.map((news) => ({
-              url: `${baseUrl}/news/${news.id}`,
-              lastModified: news.publishedAt ? new Date(news.publishedAt) : new Date(),
-              changeFrequency: 'daily' as const,
+  // 팀마다 따로 실패해도 나머지 팀 기사는 넣는다
+  await Promise.all(
+    CLUB_ORDER.map(async (club) => {
+      try {
+        for (let page = 0; page < MAX_PAGES_PER_CLUB; page++) {
+          const res = await getClubNews(club, page, PAGE_SIZE);
+          if (!res) break;
+          for (const item of res.content) {
+            if (seen.has(item.id)) continue;
+            seen.add(item.id);
+            articles.push({
+              url: `${SITE_URL}/${club}/news/${item.id}`,
+              lastModified: item.publishedAt ? new Date(item.publishedAt) : now,
+              changeFrequency: 'daily',
               priority: 0.6,
-            }));
-            allNewsUrls = [...allNewsUrls, ...pageUrls];
+            });
           }
-        });
+          if (page + 1 >= res.totalPages) break;
+        }
+      } catch (error) {
+        console.error(`사이트맵: ${club} 기사 목록을 가져오지 못했습니다`, error);
       }
-    }
-  } catch (error) {
-    console.error('사이트맵 생성 중 뉴스 데이터를 가져오지 못했습니다:', error);
-  }
+    }),
+  );
 
-  return [...staticPages, ...allNewsUrls];
+  return [...staticPages, ...articles];
 }

@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/config/site';
 import type { Metadata } from "next";
 import { Bebas_Neue, Kanit, Great_Vibes } from "next/font/google";
 import "./globals.css";
@@ -26,10 +27,10 @@ const greatVibes = Great_Vibes({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://fipa-news.kr'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Factos 👍 👀 | 해외 축구 뉴스 플랫폼",
-    template: "%s | FIPA NEWS"
+    template: "%s | Factos"
   },
   description: "글로벌 축구 팬들을 위한 최신 뉴스, 경기 정보 및 분석 플랫폼.",
   other: {
