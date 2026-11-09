@@ -28,8 +28,13 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0
-# root로 돌리지 않는다
-RUN addgroup -S app && adduser -S app -G app
+# root로 돌리지 않는다.
+# 실행에는 node만 있으면 된다 — 베이스 이미지에 딸린 npm·corepack(과 그 안에 묶인 라이브러리)을 지우고,
+# OS 보안 패치를 받는다 (CI Trivy 게이트가 고칠 수 있는 취약점을 막는다)
+RUN apk upgrade --no-cache \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+ && addgroup -S app && adduser -S app -G app
 COPY --from=build --chown=app:app /app/.next/standalone ./
 COPY --from=build --chown=app:app /app/.next/static ./.next/static
 COPY --from=build --chown=app:app /app/public ./public

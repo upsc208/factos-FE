@@ -1,0 +1,105 @@
+# CI/CD — factos-FE (web-svc)
+#
+#   PR:        타입 검사 + 비밀값 검사 + arm64 이미지 빌드·취약점 검사 (배포 안 함)
+#   main push: 위가 모두 통과하면 이미지를 GHCR에 올리고 서버 compose의 web만 교체
+#
+# 보안 게이트: gitleaks(커밋 기록) · Trivy(이미지의 고칠 수 있는 HIGH/CRITICAL). 걸리면 올리지도 배포하지도 않는다.
+# 서버 쪽 헬스체크·롤백은 factos-BE의 infra/compose/deploy.sh가 한다.
+#
+# 저장소 변수(Settings → Variables) SITE_URL: 사이트 주소. NEXT_PUBLIC_*라 빌드 때 박힌다
+
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/factos-web
+  SERVICE: web
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      # 예전부터 있던 lint 오류가 남아 있어 아직 관문으로 쓰지 않는다 (결과만 본다)
+      - name: Lint (non-blocking)
+        run: npx eslint
+        continue-on-error: true
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan git history for secrets
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.24.2 git /repo --no-banner --redact -v
+
+  image:
+    needs: [check, gitleaks]
+    runs-on: ubuntu-24.04-arm   # 운영 서버(Oracle A1)와 같은 arm64
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build (arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=
+            NEXT_PUBLIC_SITE_URL=${{ vars.SITE_URL || 'https://fipa-news.kr' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy — 고칠 수 있는 HIGH/CRITICAL이 있으면 실패
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1 \
+            image --severity CRITICAL,HIGH --ignore-unfixed --scanners vuln --exit-code 1 \
+            "${IMAGE}:${GITHUB_SHA}"
+
+      - name: Push to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker tag "${IMAGE}:${GITHUB_SHA}" "${IMAGE}:latest"
+          docker push "${IMAGE}:${GITHUB_SHA}"
+          docker push "${IMAGE}:latest"
+
+  deploy:
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.OCI_HOST }}" >> ~/.ssh/known_hosts
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.OCI_USER }}@${{ secrets.OCI_HOST }}" \
+            "/opt/factos/compose/deploy.sh ${SERVICE} ${GITHUB_SHA}"
