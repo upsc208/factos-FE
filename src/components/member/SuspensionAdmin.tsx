@@ -64,7 +64,7 @@ export default function SuspensionAdmin() {
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
         {member!.role === 'ADMIN' ? '전체 관리자' : `${teamLabel(member!.adminClub) ?? member!.adminClub} 팀 관리자`} · {member!.nickname}
         <span className="block mt-1 text-xs text-gray-400">
-          댓글 삭제·정지는 기사 댓글 옆 버튼으로 해요.{member!.role === 'TEAM_ADMIN' && ' 담당 팀 기사의 댓글만 관리할 수 있어요.'}
+          신고 탭이나 기사 댓글 옆 버튼으로 댓글을 지우고 정지할 수 있어요.{member!.role === 'TEAM_ADMIN' && ' 담당 팀 기사의 댓글만 관리할 수 있어요.'}
         </span>
       </p>
 

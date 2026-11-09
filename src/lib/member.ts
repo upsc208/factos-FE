@@ -51,6 +51,8 @@ export interface Comment {
   mine: boolean;
   favoriteTeam?: FavoriteTeam | null;
   moderatable?: boolean; // 보는 사람이 이 댓글을 지우고 작성자를 정지할 수 있는 관리자인지
+  reported?: boolean; // 보는 사람이 이미 신고한 댓글인지
+  reportCount?: number | null; // 처리 안 된 신고 수 — 관리자에게만 온다
 }
 
 export interface NicknameCheck {
@@ -89,7 +91,9 @@ export async function call<T>(path: string, init: RequestInit = {}): Promise<T> 
     const body = await res.json().catch(() => null);
     throw new ApiError(res.status, body?.error || '요청을 처리하지 못했습니다.');
   }
-  return res.status === 204 ? (undefined as T) : res.json();
+  // 204나 본문 없는 201(신고 등)은 undefined
+  const text = res.status === 204 ? "" : await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 // ---- 로그인 ----
@@ -134,6 +138,10 @@ export const postComment = (articleId: number, content: string) =>
   call<Comment>(`/api/news/${articleId}/comments`, { method: 'POST', body: JSON.stringify({ content }) });
 
 export const deleteComment = (commentId: number) => call<void>(`/api/comments/${commentId}`, { method: 'DELETE' });
+
+/** 댓글 신고. reason: ABUSE | SPAM | FLOOD | OTHER (OTHER면 detail 필수). 이미 신고했으면 409 */
+export const reportComment = (commentId: number, reason: string, detail?: string) =>
+  call<void>(`/api/comments/${commentId}/report`, { method: 'POST', body: JSON.stringify({ reason, detail: detail || undefined }) });
 
 // ---- 즐겨찾기 ----
 

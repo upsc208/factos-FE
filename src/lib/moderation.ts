@@ -7,6 +7,38 @@ import { call } from '@/lib/member';
  * 관리자 권한 부여는 운영자 API(`/api/admin/members`)로만 한다 — 이 화면에는 없다.
  */
 
+export const REPORT_REASONS = [
+  { id: 'ABUSE', label: '욕설·비하' },
+  { id: 'SPAM', label: '광고·스팸' },
+  { id: 'FLOOD', label: '도배' },
+  { id: 'OTHER', label: '기타' },
+] as const; // 백엔드 ReportReason
+export type ReportReasonId = (typeof REPORT_REASONS)[number]['id'];
+export const REPORT_DETAIL_MAX = 200;
+
+export const reportReasonLabel = (id: string) => REPORT_REASONS.find((r) => r.id === id)?.label ?? id;
+
+/** 관리자 신고 목록 한 칸 — 댓글 하나에 모인 신고 */
+export interface ReportedComment {
+  commentId: number;
+  commentContent: string;
+  authorNickname: string;
+  authorMemberId?: number | null;
+  articleId: number;
+  articleTitle: string;
+  articleClub?: string | null;
+  reportCount: number;
+  reasons: Partial<Record<ReportReasonId, number>>;
+  details: string[];
+  firstReportedAt: string;
+  lastReportedAt: string;
+}
+
+export const fetchReports = () => call<ReportedComment[]>('/api/moderation/reports');
+
+export const dismissReports = (commentId: number) =>
+  call<{ closed: number }>(`/api/moderation/reports/${commentId}/dismiss`, { method: 'POST' });
+
 export const SUSPEND_DAYS = [1, 3, 7, 30] as const; // 백엔드 ModerationService.ALLOWED_DAYS
 export const SUSPEND_REASON_MAX = 500;
 

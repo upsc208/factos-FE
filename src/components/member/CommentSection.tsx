@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Ban, MessageCircle, ShieldX, Trash2, UserCircle2 } from 'lucide-react';
+import { Ban, Flag, MessageCircle, ShieldX, Trash2, UserCircle2 } from 'lucide-react';
 import { useMember } from './MemberProvider';
 import LoginButtons from './LoginButtons';
 import SuspendForm from './SuspendForm';
+import ReportForm from './ReportForm';
 import { formatDateTime, moderatorDeleteComment } from '@/lib/moderation';
 import { ApiError, deleteComment, fetchComments, postComment, teamLabel, type Comment } from '@/lib/member';
 
@@ -28,6 +29,7 @@ export default function CommentSection({ articleId }: { articleId: number }) {
   const [error, setError] = useState('');
   const [posting, setPosting] = useState(false);
   const [suspending, setSuspending] = useState<number | null>(null); // 정지 폼을 연 댓글
+  const [reporting, setReporting] = useState<number | null>(null); // 신고 폼을 연 댓글
   const [notice, setNotice] = useState('');
 
   // 정지 중이면 쓰기 칸 대신 안내 (서버도 403으로 막는다)
@@ -162,9 +164,29 @@ export default function CommentSection({ articleId }: { articleId: number }) {
                     <Trash2 size={14} />
                   </button>
                 )}
+                {/* 일반 회원: 남의 댓글 신고 (관리자는 바로 지우거나 정지한다) */}
+                {member && !c.mine && !c.moderatable && (
+                  c.reported ? (
+                    <span className="ml-auto text-[11px] text-gray-400">신고함</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setReporting(reporting === c.id ? null : c.id); setNotice(''); }}
+                      className="ml-auto text-gray-300 hover:text-red-500"
+                      title="신고"
+                    >
+                      <Flag size={13} />
+                    </button>
+                  )
+                )}
                 {/* 관리자: 남의 댓글 삭제·작성자 정지 (자기 팀 기사만 — moderatable은 서버가 정한다) */}
                 {c.moderatable && !c.mine && (
                   <span className="ml-auto flex items-center gap-2">
+                    {!!c.reportCount && (
+                      <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-300" title="처리 안 된 신고">
+                        신고 {c.reportCount}
+                      </span>
+                    )}
                     <button type="button" onClick={() => moderatorRemove(c.id)} className="text-gray-400 hover:text-red-500" title="관리자 삭제">
                       <Trash2 size={14} />
                     </button>
@@ -180,6 +202,17 @@ export default function CommentSection({ articleId }: { articleId: number }) {
                 )}
               </div>
               <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">{c.content}</p>
+              {reporting === c.id && (
+                <ReportForm
+                  commentId={c.id}
+                  onCancel={() => setReporting(null)}
+                  onDone={() => {
+                    setReporting(null);
+                    setComments((prev) => prev.map((x) => (x.id === c.id ? { ...x, reported: true } : x)));
+                    setNotice('신고했어요. 관리자가 확인할게요.');
+                  }}
+                />
+              )}
               {suspending === c.id && (
                 <SuspendForm
                   commentId={c.id}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import SuspensionAdmin from '@/components/member/SuspensionAdmin';
+import AdminTabs from '@/components/member/AdminTabs';
 
 export const metadata = { title: '관리자', robots: { index: false } };
 
@@ -9,8 +9,8 @@ export default function AdminPage() {
     <main className="flex-1 flex justify-center px-4 py-20">
       <div className="w-full max-w-3xl">
         <Link href="/" className="text-xs font-bold text-gray-400">FACTOS</Link>
-        <h1 className="mt-2 mb-4 text-2xl font-black text-gray-900 dark:text-white">관리자 · 정지 목록</h1>
-        <SuspensionAdmin />
+        <h1 className="mt-2 mb-4 text-2xl font-black text-gray-900 dark:text-white">관리자</h1>
+        <AdminTabs />
       </div>
     </main>
   );
