@@ -29,7 +29,15 @@ export const teamLabel = (id?: string | null) => TEAM_OPTIONS.find((t) => t.id =
 
 export type MemberRole = 'MEMBER' | 'TEAM_ADMIN' | 'ADMIN';
 
+/**
+ * 권한 세 단계 (화면 이름 = 저장 값): sadmin = ADMIN (개발자·운영자, 통계·팀 관리자 지정) ·
+ * admin = TEAM_ADMIN (팀별 관리자, 자기 팀 신고·정지) · user = MEMBER
+ */
 export const isModerator = (m?: Member | null) => !!m && (m.role === 'TEAM_ADMIN' || m.role === 'ADMIN');
+export const isSadmin = (m?: Member | null) => !!m && m.role === 'ADMIN';
+
+export const roleLabel = (role?: MemberRole | null, club?: string | null) =>
+  role === 'ADMIN' ? 'sadmin' : role === 'TEAM_ADMIN' ? `admin · ${teamLabel(club) ?? club ?? '?'}` : 'user';
 
 export interface Member {
   id: number;
@@ -154,3 +162,22 @@ export const setBookmark = (articleId: number, on: boolean) =>
   call<{ bookmarked: boolean }>(`/api/me/bookmarks/${articleId}`, { method: on ? 'PUT' : 'DELETE' }).then((r) => r.bookmarked);
 
 export const fetchBookmarks = (page = 0) => call<ClubNewsPage>(`/api/me/bookmarks?page=${page}&size=20`);
+
+// ── sadmin: 팀 관리자 지정 (서버도 sadmin만 받는다) ──
+export interface ManagedMember {
+  id: number;
+  nickname: string;
+  provider: string;
+  role: MemberRole;
+  adminClub?: string | null;
+  createdAt: string;
+}
+
+export const fetchModerators = () => call<ManagedMember[]>('/api/moderation/members/moderators');
+export const searchMembers = (nickname: string) =>
+  call<ManagedMember[]>(`/api/moderation/members?nickname=${encodeURIComponent(nickname)}`);
+export const setMemberRole = (id: number, role: 'MEMBER' | 'TEAM_ADMIN', club?: string) =>
+  call<ManagedMember>(`/api/moderation/members/${id}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role, club }),
+  });
