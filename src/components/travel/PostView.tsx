@@ -47,7 +47,7 @@ export default function PostView({ clubId, postId }: { clubId: string; postId: n
     if (!window.confirm('이 글을 삭제할까요? 댓글도 함께 지워져요.')) return;
     try {
       await deletePost(postId);
-      router.push(`/${clubId}/travel`);
+      router.push(`/${clubId}/travel/board`);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : '삭제하지 못했어요.');
     }
@@ -85,7 +85,7 @@ export default function PostView({ clubId, postId }: { clubId: string; postId: n
 
   return (
     <article>
-      <Link href={`/${clubId}/travel`} className="inline-flex items-center gap-1 text-sm font-bold text-gray-400 hover:text-gray-600 mb-6">
+      <Link href={`/${clubId}/travel/board`} className="inline-flex items-center gap-1 text-sm font-bold text-gray-400 hover:text-gray-600 mb-6">
         <ArrowLeft size={16} /> 목록
       </Link>
 
